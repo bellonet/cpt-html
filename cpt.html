@@ -1,0 +1,268 @@
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>	
+
+<p id="CPTinstructions1" style="margin:200px 150px;">In the following experiment we will show you a series of shapes in different colours (press space to continue).</p>
+
+<div id="CPTinstructions2" style="display: none;">
+	<p style=" margin: 200px 150px 0px 150px;">When you will see a red square press space as quickly as possible.</p>
+	<p style="margin: 30px 150px;">This is how the red square looks like:</p>
+	<img src="11.png" style="margin:50px 600px">
+</div>
+
+<p id="CPTinstructions3" style="display: none; margin: 200px 150px;">We will start with a practice run. Press space whenever you are ready to start the practice. Remember to press space ONLY when you see a red square!</p>
+
+<img src="blank.png" id="CPTresponseCard" alt="just nothing" style="margin:200px 600px; display: none;"/>
+
+<!-- Feedback to the participant after choosing a pile the response card belongs to - was he right or wrong. -->
+<p id="CPTright" style="color:green; display: none; margin:250px 650px;"> Right</p>
+<p id="CPTwrong" style="color:red; display: none; margin:250px 650px;"> Wrong</p>
+
+<p id="CPTinstructions4" style="display: none; margin: 200px 150px;">This concludes the training phase (press space to continue).</p>
+
+<p id="CPTinstructions5" style="display: none; margin: 200px 150px;">You will now start with the proper test. It will be longer and there will be no feedback. Remember to press space only swhen you see a red square. (press space to start the test)</p>
+
+<div id="CPTinstructions6" style="display: none; margin: 200px 150px;">
+	<p>Thank you for participating in our study!</p>
+
+	<br><br>
+	<input type="button" value="Continue" onclick="next();" />
+</div>
+
+<script>
+
+	var state = 'CPTinstructions1'; 
+
+	$(window).keypress(function(e) {
+		if ((e.keyCode == 32) && (current==7)) { // space
+			CPTspacePressed();
+		}
+	});
+
+	function CPTspacePressed() {
+		if (state == 'CPTinstructions1') {
+			state = 'CPTinstructions2';
+			CPTstateTransitionInstructionsToInstructions2();
+		} else if (state == 'CPTinstructions2') {
+			state = 'CPTinstructions3';
+			CPTstateTransitionInstructionsToInstructions3();
+		} else if (state == 'CPTinstructions3') {
+			state = 'CPTpractice';
+			CPTstateTransitionToPractice();
+		} else if ((state == 'CPTpractice') && (CPTisKeyPressed == 0)) {
+			CPTcatchResponse();
+		} else if (state == 'CPTinstructions4') {
+			state = 'CPTinstructions5';
+			CPTstateTransitionInstructionsToInstructions5();
+		} else if (state == 'CPTinstructions5') {
+			state = 'CPTtest';
+			CPTstateTransitionToTest();
+		} else if ((state == 'CPTtest') && (CPTisKeyPressed == 0)) {
+			CPTcatchResponse();
+		}
+	}
+
+	function CPTstateTransitionInstructionsToInstructions2() {
+		$('#CPTinstructions2').show();
+		$('#CPTinstructions1').hide();
+	}
+
+	function CPTstateTransitionInstructionsToInstructions3() {
+		$('#CPTinstructions3').show();
+		$('#CPTinstructions2').hide();
+	}
+
+	function CPTstateTransitionToPractice() {
+		$('#CPTinstructions3').hide();
+
+		setTimeout( function() {
+			CPTstatePracticeCard();
+		}
+		, 500);
+	}
+
+	function CPTendPractice() {
+		setTimeout( function(){ 
+			$('#CPTinstructions4').show();
+  		}
+	 	, 500);
+	 	state = 'CPTinstructions4';
+	}
+
+	function CPTstateTransitionInstructionsToInstructions5() {
+		$('#CPTinstructions5').show();
+		$('#CPTinstructions4').hide();
+	}
+
+	function CPTstateTransitionToTest() {
+		$('#CPTinstructions5').hide();
+		setTimeout( function() {
+			CPTstateTestCard();
+		}
+		, 500);
+	}
+
+	function CPTendTest() {
+		$('#CPTinstructions6').show();
+		CPTlogScore();
+	}
+
+	var practiceCards = [11, 11, 11, 32, 11, 21, 11, 11, 11, 11, 11, 11, 14, 43, 11];
+
+   	var practiceIntervals = [2000, 2500, 2000, 1500, 1000, 2000 ,2500, 1500, 1000, 1000, 1000, 1500, 2000, 2500, 1500];
+
+   	var CPTisKeyPressed = 0;
+
+   	function CPTstatePracticeCard() {
+
+		card = practiceCards[0];
+		interval = practiceIntervals[0];
+
+		document.getElementById('CPTresponseCard').src = card.toString() + ".png";
+		$('#CPTresponseCard').show();
+
+		CPTisKeyPressed = 0;
+
+		setTimeout( function(){
+			CPTstatePracticeISI();
+  		}
+	 	, 100 );
+
+	 	practiceCards.shift();
+		practiceIntervals.shift();
+   	}
+
+   	function CPTstatePracticeISI() {
+   		$('#CPTresponseCard').hide();
+
+   		setTimeout( function() { 
+			CPTgiveFeedback();
+  		}
+	 	, interval );
+
+   	}
+
+   	function CPTcatchResponse() {
+   		CPTisKeyPressed = 1;
+   		if (state == 'CPTtest') {
+   			reactionTime = Date.now() - startTime;
+   		}
+   	}
+
+   	function CPTgiveFeedback() {
+			if (((CPTisKeyPressed == 1) && (card == 11)) || ((CPTisKeyPressed == 0) && (card != 11))) {
+				$('#CPTright').show();
+			} else {
+				$('#CPTwrong').show();
+			}
+
+			setTimeout ( function() {
+				intervalAfterFeedback();
+			}
+			, 200 );
+   	}
+
+   	function intervalAfterFeedback() {
+   		$('#CPTright').hide();
+   		$('#CPTwrong').hide();
+
+   		setTimeout ( function () {
+   			if (practiceCards.length > 0 ) {
+   				CPTstatePracticeCard();
+   			} else {
+   				CPTendPractice();
+   			}
+   		}
+   		, 200);
+   	}
+
+   	var testCards = [11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 43, 11, 11, 11, 34, 12, 11, 12, 11, 11, 23, 11, 11, 11, 21, 11, 11, 11, 11, 31, 32, 14, 11, 44, 11, 44, 11,  11, 11, 11, 11, 22, 11, 22, 11, 11, 24, 11, 11, 11, 14, 11, 34, 11, 34, 11, 11, 11, 11, 11, 11, 11, 43, 11, 11, 11, 14, 34, 11, 11, 11, 11, 11, 11, 11, 32, 11, 11, 22, 11, 43, 42, 11, 11, 11, 11, 11, 33, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 24, 11, 11, 31, 11, 11, 11, 41, 11, 11, 23, 11, 11, 11, 11, 11, 41, 11, 11,11, 34, 11, 11, 32, 11, 13, 11, 11, 11, 11, 11, 11, 41, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 33, 11, 11, 11, 11, 23, 11, 11, 11, 11, 11, 11, 11, 11, 11, 24, 11, 11, 11, 11, 22, 21, 11, 11, 11, 42, 23, 31, 11, 21, 11, 11, 11, 11, 21, 11, 43, 11, 31, 11, 11, 11, 11, 11, 11, 11, 31, 11, 11, 11, 21, 11, 11, 12, 11, 44, 11, 11, 11, 11, 11, 11, 13, 11, 11, 11, 41, 11, 11, 11, 11, 11, 11, 41, 11, 11, 11, 13, 44, 11, 11,11, 11, 11, 11, 11, 11, 12, 44, 11, 42, 11, 44, 11, 12, 11, 11, 11, 11, 11, 11, 11, 43, 11, 13, 11, 11, 11, 11, 11, 11, 11, 11, 31, 22, 11, 11, 24, 11, 32, 42, 42, 24, 11, 33, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 14, 11, 13, 11, 11, 14, 11, 11, 11, 11, 11, 23, 11, 11, 32, 12, 33, 11, 21, 11, 11, 11, 11, 11, 11, 11, 11, 13, 33, 11, 11, 11];
+
+   	var testIntervals = [ 1000, 1500, 1000, 1000, 2500, 1000, 2500, 2000, 1500, 1500, 2000, 2000, 1500, 2000, 1500, 2000, 1500, 2500, 1000, 1000, 2000, 2500, 2500, 1500, 1000, 2500, 2000, 2000, 2000, 1000, 1000, 1500, 2000, 2000, 2000, 2000, 1500, 1000, 2500, 1000, 2000, 1000, 1000, 1000, 1000, 1500, 1500, 1000, 2000, 2500, 1500, 2000, 1500, 1500, 2500, 2000, 2500, 1500, 1500, 1000, 2000, 2000, 2000, 1000, 1500, 1500, 2000, 1500, 1500, 2500, 1500, 1000, 2500, 2500, 2000, 1500, 1500, 1500, 2000, 2500, 2000, 1500, 2000, 1500, 1500, 1500, 1000, 1000, 1000, 2500, 2000, 2500, 1000, 2500, 2000, 2500, 2000, 1500, 1500, 1000, 2500, 1000, 2500, 2500, 1500, 1500, 1000, 1500, 1000, 2000, 1000, 2500, 2500, 2000, 1000, 1000, 1000, 1500, 2500, 2500, 1500, 1000, 2500, 1500, 1500, 2000, 2500, 1000, 2000, 1000, 1000, 2500, 1000, 2000, 2500, 2500, 2500, 2000, 1000, 2000, 1000, 1000, 2000, 1000, 2500, 1500, 2500, 1500, 1000, 1000, 2500, 1000, 1500, 1500, 2000, 1000, 1500, 2500, 1000, 2500, 1000, 2500, 1000, 2000, 1500, 1500, 2000, 2000, 2500, 1500, 2000, 2500, 2000, 1500, 1000, 2000, 1000, 1000,1000, 1000, 2500, 1000, 1000, 2500, 2500, 1000, 2500, 1000, 1000, 2500, 2500, 2000, 1000, 2000, 2000, 2000, 1500, 1500, 2500, 2500, 1000, 2500, 1000, 1000, 1000, 1000, 2500, 1500, 1500, 2000, 1500, 2500, 1500, 1500, 2000, 1500, 1000, 1000, 1500, 1500, 2000, 1500, 2000, 1500, 2500, 2000, 1500, 2500, 2500, 1500, 2500, 1000, 1500, 2500, 2000, 2500, 1000, 1000, 2500, 1500, 2500, 1000, 2000, 2500, 1000, 2500, 1500, 2000, 2000, 1000, 2000, 1500, 1500, 2000, 1500, 2000, 2500, 2500, 2000, 1500, 1000, 1500, 2500, 2000, 2500, 2000, 2500, 1500, 1500, 2000, 2500, 2000, 2500, 2500, 1500, 2500, 2500, 2000, 2500, 1000, 2500, 2000, 1500, 2500, 2000, 1500, 2000, 1500, 1000, 1500, 2000, 1000, 1000, 2000, 2000, 2500, 2000, 1000, 1500, 1500, 2500, 1500, 2500, 1000, 2000, 2000, 2000, 2500, 2500, 2000, 2500, 1000, 1500, 2000, 2500, 1000, 2000, 1500, 2000, 2000];
+
+   	var startTime = Date.now();
+   	var cardCounter = 1;
+
+   	var reactionTime = 0;
+
+   	var correctRTSum = 0;
+   	var correctRTCount = 0;
+   	var correctResponseCount = 0;
+   	var correctNonResponseCount = 0;
+   	var ommisionCount = 0;
+   	var commisionCount = 0;
+   	var totalWrongs = 0;
+
+   	function CPTstateTestCard() {
+   		startTime = Date.now();
+
+		card = testCards[0];
+		interval = testIntervals[0];
+		document.getElementById('CPTresponseCard').src = card.toString() + ".png";
+		$('#CPTresponseCard').show();
+
+		CPTisKeyPressed = 0;
+
+		setTimeout( function(){ 
+			CPTstateTestISI();
+  		}
+	 	, 100 );	
+
+	 	testCards.shift();
+		testIntervals.shift();
+		cardCounter++;
+   	}
+
+   	function CPTstateTestISI() {
+   		$('#CPTresponseCard').hide();
+
+   		if (testCards.length > 0 ) {
+   			setTimeout( function(){
+   		   		if (CPTisKeyPressed == 1) {
+   		   			if (card == 11) {
+	   		   			correctRTSum = correctRTSum + reactionTime;
+	   		   			correctRTCount++;
+	   		   			correctResponseCount++;
+	   		   		} else {
+	   		   			commisionCount++;
+	   		   			totalWrongs++;
+	   		   		}
+   		   		} else {
+   		   			if (card == 11) {
+	   		   			ommisionCount++;
+	   		   			totalWrongs++;
+	   				} else {
+	   					correctNonResponseCount++;
+	   				}
+					} 
+
+					CPTlogTrial();
+					reactionTime = 0;
+				CPTstateTestCard();
+  			}
+	 		, interval );
+   		} else {
+   			CPTendTest();
+   		}
+   	}
+
+   	function CPTlogTrial() {
+		CPTaddVariable("card-" + cardCounter + ", rt, correct-response, correct-nonresponse, ommision, commision", reactionTime + ", " + correctResponseCount + "," + correctNonResponseCount + "," + ommisionCount + "," + commisionCount);
+	}
+
+	function CPTlogScore() {
+		CPTaddVariable("average-correct-RT", correctRTSum/correctRTCount);
+		CPTaddVariable("correct-response", correctResponseCount);
+		CPTaddVariable("correct-nonresponse", correctNonResponseCount);
+		CPTaddVariable("ommision", ommisionCount);
+		CPTaddVariable("commision", commisionCount);
+	}
+
+	function CPTaddVariable(name, value) {
+   		var input = document.createElement("input");
+		input.setAttribute("type", "hidden");
+		input.setAttribute("name", name );
+		input.setAttribute("value", value);
+		//append to form element that you want .
+		document.body.appendChild(input);
+	}
+
+</script>
